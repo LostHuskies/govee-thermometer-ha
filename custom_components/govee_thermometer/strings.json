@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Govee API Key",
-        "description": "Enter your Govee Developer API key. Request one at [developer.govee.com]({api_docs}).",
+        "description": "Enter your Govee Developer API key.",
         "data": {
           "api_key": "API Key"
         }
