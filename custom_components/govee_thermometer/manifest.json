@@ -5,6 +5,7 @@
     "@Conexo-Casa"
   ],
   "config_flow": true,
+  "options_flow": true,
   "documentation": "https://github.com/Conexo-Casa/govee-thermometer-ha",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/Conexo-Casa/govee-thermometer-ha/issues",
