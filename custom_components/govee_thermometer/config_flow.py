@@ -1,102 +1,63 @@
-"""Config flow for Govee Thermometer integration."""
-from __future__ import annotations
-
-import logging
-from typing import Any
-
-import aiohttp
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
-from .api import GoveeApi, GoveeAuthError, GoveeApiError
-from .const import (
-    DOMAIN,
-    CONF_API_KEY,
-    CONF_TEMP_UNIT,
-    TEMP_UNIT_CELSIUS,
-    TEMP_UNIT_FAHRENHEIT,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-STEP_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
-
+from .const import DOMAIN, CONF_API_KEY, CONF_TEMP_UNIT, TEMP_UNIT_CELSIUS, TEMP_UNIT_FAHRENHEIT
 
 class GoveeThermometerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Single-step config flow: enter Govee API key."""
+    """Handle a config flow for Govee Thermometer."""
 
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        errors: dict[str, str] = {}
-
+    async def async_step_user(self, user_input=None):
+        """Handle the initial step."""
+        errors = {}
         if user_input is not None:
-            api_key = user_input[CONF_API_KEY].strip()
-            session = async_get_clientsession(self.hass)
-            api     = GoveeApi(api_key, session)
-            try:
-                await api.async_validate_key()
-            except GoveeAuthError:
+            # Simple validation to ensure API key is provided
+            if not user_input.get(CONF_API_KEY):
                 errors["base"] = "invalid_api_key"
-            except (GoveeApiError, aiohttp.ClientError):
-                errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(f"govee_{api_key[-8:]}")
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title="Govee Thermometer / Hygrometer",
-                    data={CONF_API_KEY: api_key},
-                )
+                return self.async_create_entry(title="Govee Thermometer", data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_SCHEMA,
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): cv.string}),
             errors=errors,
-            description_placeholders={
-                "api_docs": "https://developer.govee.com/docs/getting-started"
-            },
         )
 
     @staticmethod
     @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> GoveeThermometerOptionsFlow:
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
         return GoveeThermometerOptionsFlow(config_entry)
 
 
 class GoveeThermometerOptionsFlow(config_entries.OptionsFlow):
-    """Options flow to configure temperature unit."""
+    """Handle options flow for Govee Thermometer."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        # Use modern HA pattern instead of assigning self.config_entry directly
+        self._config_entry = config_entry
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        current_unit = self.config_entry.options.get(
-            CONF_TEMP_UNIT, TEMP_UNIT_CELSIUS
+        # Get current setting or default to Celsius
+        current_unit = self._config_entry.options.get(CONF_TEMP_UNIT, TEMP_UNIT_CELSIUS)
+
+        options_schema = vol.Schema(
+            {
+                vol.Required(CONF_TEMP_UNIT, default=current_unit): vol.In(
+                    {
+                        TEMP_UNIT_CELSIUS: "Celsius (°C)",
+                        TEMP_UNIT_FAHRENHEIT: "Fahrenheit (°F)",
+                    }
+                )
+            }
         )
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_TEMP_UNIT, default=current_unit): vol.In(
-                        {
-                            TEMP_UNIT_CELSIUS: "Celsius (°C)",
-                            TEMP_UNIT_FAHRENHEIT: "Fahrenheit (°F)",
-                        }
-                    ),
-                }
-            ),
-        )
+        return self.async_show_form(step_id="init", data_schema=options_schema)
