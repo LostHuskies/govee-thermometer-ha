@@ -24,9 +24,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinators: list[GoveeCoordinator] = hass.data[DOMAIN][entry.entry_id]
+    temp_setting = entry.options.get(
+        CONF_TEMP_UNIT,
+        entry.data.get(CONF_TEMP_UNIT),
+    )
+
     temp_unit = (
         UnitOfTemperature.FAHRENHEIT
-        if entry.options.get(CONF_TEMP_UNIT) == TEMP_UNIT_FAHRENHEIT
+        if temp_setting == TEMP_UNIT_FAHRENHEIT
         else UnitOfTemperature.CELSIUS
     )
     entities: list[SensorEntity] = []
