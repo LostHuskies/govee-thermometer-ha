@@ -5,7 +5,8 @@
         "title": "Govee API Key",
         "description": "Enter your Govee Developer API key.",
         "data": {
-          "api_key": "API Key"
+          "api_key": "API Key",
+          "temp_unit": "Temperature Unit on Govee Account"
         }
       }
     },
@@ -23,7 +24,7 @@
         "title": "Govee Thermometer Options",
         "description": "Select the temperature unit your Govee account is configured to use. This is an account-level setting in the Govee Home app.",
         "data": {
-          "temp_unit": "Temperature unit from API"
+          "temp_unit": "Temperature Unit from API"
         }
       }
     }
