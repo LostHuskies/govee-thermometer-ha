@@ -32,6 +32,8 @@ class GoveeThermometerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         {
                             TEMP_UNIT_CELSIUS: "Celsius (°C)",
                             TEMP_UNIT_FAHRENHEIT: "Fahrenheit (°F)",
+                        }
+                    ),
                 }
             ),
             errors=errors,
@@ -58,7 +60,13 @@ class GoveeThermometerOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         # Get current setting or default to Celsius
-        current_unit = self._config_entry.options.get(CONF_TEMP_UNIT,config_entry.data.get(CONF_TEMP_UNIT,TEMP_UNIT_CELSIUS,),)
+        current_unit = self._config_entry.options.get(
+            CONF_TEMP_UNIT,
+            self._config_entry.data.get(
+                CONF_TEMP_UNIT,
+                TEMP_UNIT_CELSIUS,
+                ),
+        )
 
         options_schema = vol.Schema(
             {
